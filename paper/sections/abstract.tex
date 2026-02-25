@@ -1,0 +1,33 @@
+% Bioinformatics structured abstract: Motivation / Results / Availability
+
+\textbf{Motivation:}
+Model-based admixture estimation methods such as ADMIXTURE and fastmixture
+are widely used to infer individual ancestry proportions from genome-wide
+genotype data, but their CPU-bound runtime makes $K$ sweeps with multiple
+random seeds impractical at biobank scale.
+Existing GPU-accelerated alternatives sacrifice the exact binomial likelihood
+model for speed, reducing the accuracy and interpretability of ancestry
+estimates.
+
+\textbf{Results:}
+We present \gpu{}, which reformulates both the E-step and M-step of the
+admixture expectation-maximisation algorithm as GPU-native dense matrix
+multiplications, preserving the exact binomial likelihood \emph{model} while
+achieving $41\times$ and $213\times$ speedups over fastmixture and ADMIXTURE
+on the 1000 Genomes Phase\,3 dataset ($N=3{,}202$; $K=5$).
+Three algorithmic innovations amplify these gains: Nesterov momentum reduces
+EM iterations by $2.3\times$ and improves converged log-likelihood by $7{,}865$
+units over plain EM; stochastic mini-batch EM improves solution quality
+while reducing peak GPU memory; and streaming randomised SVD provides
+efficient spectral initialisation for large datasets.
+The best of five parallel \gpu{} seeds matches or exceeds fastmixture at
+every tested $K \in \{2,\ldots,10\}$, while completing five seeds costs less
+wall time than a single fastmixture run, making multi-seed inference the
+practical default workflow.
+We also provide CLUMPAK-lite (\clite{}) for label-consistent
+ancestry-proportion visualisation across $K$ values, and a multi-GPU
+dispatcher that completes $K=2$--$10$ scans in ${\approx}130$\,s on eight GPUs.
+
+\textbf{Availability and implementation:}
+\gpu{} is implemented in Python using PyTorch and is freely available at
+\url{https://github.com/[REPO]} under the MIT licence.

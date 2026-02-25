@@ -1,0 +1,103 @@
+\section{Introduction}
+\label{sec:intro}
+
+Individual ancestry estimation—resolving each genome into proportions
+contributed by $K$ ancestral populations—is a cornerstone analysis in
+modern human genetics.
+Its applications span characterising patterns of human diversity and
+migration \citep{rosenberg2002genetic,novembre2008genes}, identifying and
+correcting for population stratification in genome-wide association studies
+\citep{price2006principal}, reconstructing recent demographic events such as
+colonial admixture and diaspora formation, and assigning continental or
+subcontinental ancestry in clinical and forensic genomics.
+The utility of these applications depends critically on obtaining accurate
+ancestry proportion estimates for the precise cohort under study, placing
+the estimation method at the centre of the analysis pipeline.
+The foundational methods \textsc{structure} \citep{pritchard2000inference},
+FRAPPE \citep{tang2005estimation}, and ADMIXTURE \citep{alexander2009fast}
+formalise this as maximum likelihood estimation under a binomial admixture
+model: individuals' genotypes at $M$ biallelic loci are treated as
+independent draws from a mixture of $K$ ancestral allele-frequency
+distributions.
+ADMIXTURE reformulated the expectation-maximisation (EM) algorithm with
+block-coordinate updates amenable to vectorised computation,
+reducing runtime from days to hours on datasets available at the time.
+fastSTRUCTURE \citep{raj2014faststructure} achieved further gains through
+variational inference, while \fm{} \citep{meisner2024fast} recently
+delivered approximately $20\times$ speedup over ADMIXTURE via SQUAREM-accelerated
+EM \citep{varadhan2008simple}.
+
+Despite these advances, model-based admixture inference remains
+computationally prohibitive at biobank scale.
+Datasets such as the UK Biobank \citep{bycroft2018uk} encompass hundreds of
+thousands of individuals, and the EM runtime scales with both $N$ and $M$:
+even with \fm{}'s acceleration, a $K=2$--$10$ sweep over $200{,}000$ SNPs
+requires hours per $K$ value on a many-core server.
+In practice, this forces analysts to run a single value of $K$ with a single
+random seed, forgoing two scientifically important capabilities: rigorous
+$K$ selection by cross-validation or information criteria, and the detection
+of multiple local optima—a well-documented feature of the EM landscape for
+mixture models \citep{jakobsson2007clumpp,dempster1977maximum}.
+
+Graphics processing units (GPUs) offer a natural path to acceleration: their
+thousands of parallel arithmetic units achieve peak throughput when
+computation is cast as large dense matrix multiplications (\textsc{dgemm}).
+Prior GPU-accelerated approaches have pursued speed by departing from the
+classical likelihood framework.
+Neural ADMIXTURE \citep{mantes2023neural} replaces EM with a neural-network
+surrogate trained by gradient descent, which is fast but yields Q matrices
+that are markedly less self-consistent across SNP subsets than ADMIXTURE's
+model-based estimates \citep{meisner2024fast}.
+SCOPE \citep{chiu2022scope} optimises a least-squares latent-subspace
+objective rather than the binomial log-likelihood, gaining scalability at
+the cost of the interpretable per-population allele-frequency matrix that
+practitioners rely on for biological annotation.
+This apparent accuracy--speed trade-off has persisted largely because the
+standard EM updates for admixture models had not been reformulated to map
+efficiently onto GPU \textsc{dgemm} primitives.
+
+Here we present \gpu{}, a GPU-accelerated admixture estimation tool that
+resolves this trade-off by expressing both the E-step and M-step entirely
+as \textsc{dgemm} operations on the full genotype matrix, preserving the
+exact ADMIXTURE binomial likelihood model without approximating the
+probabilistic framework.
+We augment this GPU-native EM with three complementary algorithmic innovations.
+First, FISTA-style Nesterov momentum \citep{beck2009fast} applied in the
+space of the EM iterates reduces iterations to convergence by $2.3\times$
+and empirically yields higher-quality solutions than plain EM.
+Second, stochastic mini-batch EM partitions the SNP axis into subsets
+processed sequentially each iteration, providing an implicit stochastic
+perturbation that improves solution quality while reducing peak GPU memory
+requirements; as with any stochastic EM, individual iterations optimise a
+subset of the data rather than the full likelihood, and convergence to a
+good full-data optimum is achieved through the aggregated effect of many
+such partial steps.
+Third, a streaming randomised SVD \citep{halko2011finding} initialises $Q$
+and $P$ from the leading spectral structure of the genotype matrix without
+materialising the full centred $N \times M$ matrix, enabling initialisation
+on datasets that exceed available GPU memory.
+Together, these innovations yield $41\times$ and $213\times$ speedups over
+\fm{} and \admix{} at $K=5$ on the 1000 Genomes Project dataset, while
+\emph{increasing} the converged log-likelihood by $2{,}892$ and $3{,}088$
+units, respectively, over these baselines.
+
+In addition to the core estimation engine, \gpu{} ships with CLUMPAK-lite
+(\clite{}), a Python post-processor that solves the label-switching problem
+within a single $K$ via the Hungarian algorithm and across $K$ values via a
+greedy bottom-up procedure, enabling consistent ancestry-proportion bar plots
+across an entire $K$ sweep without external dependencies.
+A built-in multi-GPU dispatcher assigns independent $K$ values to separate
+GPU devices, completing a full $K=2$--$10$ scan in approximately $130$\,s on
+eight GPUs.
+
+Section~\ref{sec:methods} details the probabilistic model, GPU-native EM
+reformulation, Nesterov momentum scheme, mini-batch strategy, SVD
+initialisation, CLUMPAK-lite alignment procedure, and cross-validation
+protocol.
+Section~\ref{sec:results} evaluates speed, accuracy, and $K$ selection on
+the 1000 Genomes Phase\,3 dataset and quantifies each component's
+contribution through ablation.
+Section~\ref{sec:discussion} situates \gpu{} in the context of prior work
+and discusses limitations and future directions.
+Together, \gpu{} and \clite{} make accurate, multi-seed, multi-$K$ ancestry
+inference a practical default workflow rather than a computational luxury.

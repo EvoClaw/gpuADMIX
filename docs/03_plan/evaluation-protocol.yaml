@@ -1,0 +1,173 @@
+# Evaluation Protocol — gpuADMIX
+# Phase 3, M-Step 1: LOCKED after user approval
+# Generated: 2026-02-25
+
+locked: false  # Set to true after user explicit approval
+
+# ══════════════════════════════════════
+# PRIMARY METRICS (core claims)
+# ══════════════════════════════════════
+
+primary_metrics:
+  accuracy:
+    - name: RMSE
+      formula: "sqrt(mean((Q_hat - Q_true)^2))"
+      why: "Standard metric in fastmixture, SCOPE papers; directly comparable"
+      applies_to: "simulation only (Q_true known)"
+    - name: JSD
+      formula: "mean Jensen-Shannon divergence per individual"
+      why: "Bounded [0,1], symmetric, standard in population genetics"
+      applies_to: "simulation only"
+    - name: log_likelihood
+      formula: "sum_{ij} [G_ij * log(H_ij) + (2-G_ij) * log(1-H_ij)]"
+      why: "Model-based objective; compares real-data performance when Q_true unknown"
+      applies_to: "simulation + real data"
+    - name: Q_correlation
+      formula: "Pearson r^2 between estimated Q and reference (ADMIXTURE output)"
+      why: "Measures agreement with gold standard on real data"
+      applies_to: "real data (1kGP)"
+
+  speed:
+    - name: wall_clock_time_minutes
+      why: "Primary practical metric; directly comparable across methods"
+      hardware_spec: "Must report GPU model, CPU model, thread count"
+
+  scalability:
+    - name: speedup_vs_ADMIXTURE
+      formula: "ADMIXTURE_time / gpuADMIX_time"
+    - name: speedup_vs_fastmixture
+      formula: "fastmixture_time / gpuADMIX_time"
+      note: "CRITICAL: editors require this comparison"
+    - name: GPU_memory_peak_GB
+
+# ══════════════════════════════════════
+# EXPERIMENTAL SEEDS
+# ══════════════════════════════════════
+
+seeds: [42, 123, 456, 789, 1024]
+n_runs: 5
+reporting: "mean ± std across 5 runs"
+statistical_test: "paired t-test for speed comparison; Wilcoxon for accuracy"
+
+# ══════════════════════════════════════
+# EVALUATION DATASETS
+# ══════════════════════════════════════
+
+datasets:
+  - name: "SIM_K3"
+    type: simulation
+    N: 1000
+    M: 200000
+    K_true: 3
+    tool: msprime
+    purpose: "accuracy vs ground truth Q; simple scenario"
+    
+  - name: "SIM_K5_ADMIX"
+    type: simulation
+    N: 1000
+    M: 200000
+    K_true: 5
+    demographic_model: "American-admixture (as in fastmixture Scenario D)"
+    purpose: "accuracy in complex admixture scenario; matches fastmixture benchmark"
+
+  - name: "1kGP_200K"
+    type: real
+    N: 3202
+    M: 200000
+    K_test: [3, 5, 7]
+    purpose: "real-data accuracy (log-likelihood + Q correlation with ADMIXTURE); runtime"
+    file: "1kGP_200k_ldpruned.bed"
+    populations: 26
+    
+  - name: "SIM_LARGE"
+    type: simulation
+    N: 10000
+    M: 200000
+    K_true: 5
+    purpose: "scalability demo; GPU advantage vs CPU grows with N"
+
+# ══════════════════════════════════════
+# K VALUES TESTED
+# ══════════════════════════════════════
+
+K_values: [2, 3, 5, 7, 10]
+K_selection_test: "run K=2..10 on 1kGP_200K; compare wall-clock with sequential vs parallel-K"
+
+# ══════════════════════════════════════
+# BASELINES (must_include)
+# ══════════════════════════════════════
+
+baselines:
+  - name: ADMIXTURE
+    version: "1.3.0"
+    source: official_binary
+    url: "https://dalexander.github.io/admixture/"
+    threads: "match CPU core count"
+    note: "Gold standard; primary accuracy reference"
+    must_include: true
+
+  - name: fastmixture
+    version: "latest (1.0+)"
+    source: official_repo
+    url: "https://github.com/Rosemeis/fastmixture"
+    threads: "match CPU core count"
+    note: "CRITICAL: best CPU method with ADMIXTURE accuracy; mandatory comparison"
+    must_include: true
+
+  - name: SCOPE
+    version: "latest"
+    source: official_repo
+    url: "https://github.com/sriramlab/SCOPE"
+    note: "Fastest CPU method; likelihood-free; accuracy comparison"
+    must_include: true
+
+  - name: Neural_ADMIXTURE
+    version: "1.4.1 or latest"
+    source: official_repo
+    url: "https://github.com/AI-sandbox/neural-admixture"
+    note: "Only other GPU method; expected to show poor accuracy"
+    must_include: true
+
+# ══════════════════════════════════════
+# FIGURE PLAN
+# ══════════════════════════════════════
+
+planned_figures:
+  - "Fig 1: Algorithm diagram (GPU mini-batch EM pipeline)"
+  - "Fig 2: Accuracy comparison (RMSE/JSD bar plots, SIM_K3 + SIM_K5_ADMIX)"
+  - "Fig 3: Runtime comparison (wall-clock bar chart for all 4 methods, multiple K)"
+  - "Fig 4: Admixture bar plots on 1kGP_200K (K=5 or K=7, all methods)"
+  - "Fig 5: Parallel K selection speedup (wall-clock sequential vs parallel-K)"
+  - "Fig S1: GPU memory scaling"
+  - "Fig S2: Bootstrap UQ example (Q with error bars for 1kGP)"
+
+planned_tables:
+  - "Table 1: RMSE and JSD comparison across methods and scenarios"
+  - "Table 2: Runtime comparison (mean ± std across 5 runs)"
+# ══════════════════════════════════════
+# HARDWARE PROTOCOL (agent feedback)
+# ══════════════════════════════════════
+
+hardware_protocol:
+  cpu_threads: 64  # FIXED for all CPU methods
+  gpu: "report exact model (A100/V100/etc)"
+  note: "All methods on same machine; report CPU model, GPU model, thread count"
+
+# ══════════════════════════════════════
+# ADDITIONAL REQUIRED EXPERIMENTS (agent feedback)
+# ══════════════════════════════════════
+
+additional_experiments:
+  strong_scaling:
+    description: "fastmixture with 1/8/16/32/64 threads vs gpuADMIX 1 GPU"
+    dataset: "SIM_LARGE (N=10K, M=200K, K=5)"
+    purpose: "Show CPU thread saturation; GPU advantage is not just more parallelism"
+    
+  qn_vs_nesterov_on_gpu:
+    description: "QN acceleration vs Nesterov momentum, both on GPU"
+    purpose: "Justify Nesterov design choice over fastmixture QN approach"
+    required_ablation: true
+    
+  total_ksweep_time:
+    description: "Total wall-clock for K=2..10: sequential single GPU vs parallel-K multi-GPU"
+    purpose: "Show practical parallel-K advantage"

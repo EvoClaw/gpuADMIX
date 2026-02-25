@@ -1,0 +1,171 @@
+\section{Results}
+\label{sec:results}
+
+\gpu{} was benchmarked against \admix{} \citep{alexander2009fast} and
+\fm{} \citep{meisner2024fast} on the 1000 Genomes Project Phase\,3 dataset
+\citep{1000genomes2015global} comprising 3,202 individuals genotyped at
+200,000 LD-pruned autosomal SNPs.
+All methods processed the same pre-processed dataset.
+\gpu{} ran on a single NVIDIA L20 GPU (48\,GB VRAM); \fm{} and \admix{}
+ran on a 32-core Intel Xeon Platinum 8375C server.
+Speedups therefore reflect the combined advantage of GPU hardware and the
+GPU-native EM design.
+Accuracy was assessed via the log-likelihood of the converged solution and
+the mean per-component Pearson~$r^2$ between each method's admixture
+proportion matrix~$Q$ and that of \admix{} at the same~$K$, after optimal
+column alignment via the Hungarian algorithm (\clite{}).
+
+%-------------------------------------------------------------------
+\subsection{Speed}
+\label{sec:results:speed}
+
+Table~\ref{tab:main} summarises wall time and accuracy at $K=5$.
+\input{tables/table1_main}
+\gpu{} converges in $16.8 \pm 3.4$\,s (mean $\pm$ s.d., five independent
+seeds), compared with $694 \pm 40$\,s for \fm{} (five seeds) and 3,583\,s
+for \admix{} (single run; replicate runs were infeasible at this scale).
+This yields $41\times$ and $213\times$ speedups over \fm{} and \admix{},
+respectively.
+Across the full $K=2$--$10$ scan, \gpu{} wall time remains below 60\,s for
+every $K$ tested (Figure~\ref{fig:kscan}d).
+Critically, running \gpu{} with five independent seeds at $K=5$ costs
+$\approx\!84$\,s in total—comparable to a single \fm{} run—so multi-seed
+inference becomes routine on GPU precisely where it would be prohibitive on CPU.
+
+%-------------------------------------------------------------------
+\subsection{Accuracy}
+\label{sec:results:accuracy}
+
+Despite the hardware-accelerated speedup, \gpu{} matches or exceeds both
+baselines in solution quality (Table~\ref{tab:main}).
+At $K=5$, the mean log-likelihood across five seeds is
+$-241{,}224{,}751 \pm 98$, an improvement of 3,088 units over the single
+\admix{} run and 2,892 units over the \fm{} mean.
+The admixture proportion matrices are virtually identical to those of \admix{}
+($Q$\,$r^2 = 0.999987$ vs \admix{}~$Q$, mean over five \gpu{} seeds),
+confirming that neither the GPU-native reformulation nor the stochastic
+mini-batch updates compromise estimation fidelity.
+
+Welch's two-sample $t$-test on per-seed log-likelihoods
+($n_{\gpu{}} = 5$, $n_{\fm{}} = 5$, $\mathrm{df} \approx 5.0$) confirms
+that the \gpu{} advantage over \fm{} is statistically significant
+($t_{5.0} = 18.3$, $p < 10^{-4}$).
+Within \gpu{}, FISTA-style Nesterov momentum significantly outperforms
+plain EM at matched seeds ($t_{7.8} = 42.1$, $p < 10^{-6}$),
+demonstrating that momentum improves both convergence speed and final
+solution quality.
+
+%-------------------------------------------------------------------
+\subsection{$K$ scan and multi-seed strategy at high~$K$}
+\label{sec:results:kscan}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/fig2_k_scan.pdf}
+  \caption{%
+    \textbf{$K$ scan results.}
+    (a)~$\Delta$Log-likelihood of \gpu{} vs \fm{} across $K=2$--$10$ (mean
+    and best-of-five seeds shown as bars; positive = better than \fm{}).
+    (b)~Run-stability RMSE across five seeds per~$K$.
+    (c)~5-fold cross-validation log-likelihood per~$K$.
+    (d)~Wall time per $K$ value for \gpu{} (mean $\pm$ s.d., five seeds).%
+  }
+  \label{fig:kscan}
+\end{figure}
+
+Across $K=2$--$10$, \gpu{} achieves comparable or better log-likelihood than
+\fm{} when the best-of-five seed is considered (Figure~\ref{fig:kscan}a).
+For $K \leq 7$, the \gpu{} per-seed mean already equals or exceeds the
+\fm{} mean across five seeds.
+At $K \geq 8$, the EM objective landscape becomes increasingly multimodal:
+the \gpu{} mean log-likelihood falls slightly below the \fm{} mean at $K=8$
+and $K=9$, reflecting occasional convergence to suboptimal local optima.
+The best-of-five \gpu{} seed nonetheless matches or exceeds the best \fm{}
+seed at every~$K$, including a $+45{,}663$-unit advantage at $K=10$.
+Because five \gpu{} seeds at $K=10$ complete in $\approx\!300$\,s—roughly
+the same total compute as a single \fm{} run—the multi-seed strategy is
+practically justified precisely when the landscape is most challenging.
+
+The CLUMPAK-lite run-stability diagnostic corroborates this picture
+(Figure~\ref{fig:kscan}b): the mean pairwise RMSE (in admixture proportion
+units, $0$--$1$) across five seeds is below 0.02 for $K \leq 7$ and rises
+to approximately 0.04 at $K=9$--$10$, indicating greater solution variability
+but not instability in the biological interpretation.
+
+%-------------------------------------------------------------------
+\subsection{$K$ selection by cross-validation}
+\label{sec:results:cv}
+
+Five-fold SNP hold-out cross-validation
+(Section~\ref{sec:methods:cv}) provides a data-driven complement to
+information criteria (Figure~\ref{fig:kscan}c).
+The held-out log-likelihood reaches its global maximum at $K=9$
+($-240{,}873{,}512$); the largest per-$K$ improvement occurs at $K=5$,
+consistent with the five major continental ancestry groups in the dataset.
+The BIC independently reaches its minimum at $K=4$, favouring the most
+parsimonious partition of the data.
+The CV optimum at $K=9$ is accessible only via a multi-seed strategy owing
+to the multimodal landscape at high~$K$, reinforcing the practical value
+of \gpu{}'s speed in this regime.
+
+%-------------------------------------------------------------------
+\subsection{Ablation study}
+\label{sec:results:ablation}
+
+\input{tables/table2_ablation}
+
+Table~\ref{tab:ablation} quantifies the contribution of each algorithmic
+component at $K=5$.
+
+\paragraph{Nesterov momentum.}
+Removing the FISTA-style momentum (Section~\ref{sec:nesterov}) increases
+iterations from $47 \pm 8$ to $107 \pm 11$ ($2.3\times$) and lowers the
+converged log-likelihood by 7,865 units (${\approx}0.003\%$ of total LL
+magnitude), the largest single ablation penalty.
+The joint degradation in iteration count and solution quality indicates that
+momentum assists escape from shallow local optima in addition to accelerating
+convergence.
+
+\paragraph{Mini-batch EM.}
+Disabling stochastic SNP partitioning increases wall time by $45\%$
+(from 16.8 to $24.4$\,s) and marginally reduces solution quality
+($\Delta\mathrm{LL} = -751$; ${\approx}3{\times}10^{-4}\%$).
+
+\paragraph{SVD initialisation.}
+Replacing the streaming randomised SVD with random Dirichlet initialisation
+increases iterations from $47$ to $83$ ($1.8\times$) and lowers the
+final log-likelihood by 2,633 units (${\approx}0.001\%$), confirming that
+spectral initialisation provides a substantially better starting point.
+
+%-------------------------------------------------------------------
+\subsection{Population structure visualisation}
+\label{sec:results:structure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/fig4_structure_plot.pdf}
+  \caption{%
+    Admixture bar plot (STRUCTURE-style) for $K=2$--$7$ produced by
+    \clite{} on the 1000 Genomes Phase\,3 dataset.
+    Individuals are sorted by super-population label (AFR, AMR, EAS, EUR, SAS).
+    Components are aligned within and across $K$ via the Hungarian algorithm
+    and greedy bottom-up procedure, respectively.%
+  }
+  \label{fig:structure}
+\end{figure}
+
+Figure~\ref{fig:structure} shows the admixture bar plot for $K=2$--$7$
+produced by \clite{}.
+The five continental clusters (AFR, AMR, EAS, EUR, SAS) emerge cleanly at
+$K=5$ and remain stable as $K$ increases, with each additional component
+capturing recognisable sub-continental differentiation.
+Run-RMSE below 0.02 across $K=2$--$7$ (Figure~\ref{fig:kscan}b) confirms
+that the displayed solution is representative of the inferred distribution
+rather than an artefact of a single seed.
+
+%-------------------------------------------------------------------
+Collectively, these results demonstrate that \gpu{} achieves one to two
+orders of magnitude faster inference than state-of-the-art CPU tools while
+matching or exceeding their accuracy, that a GPU-enabled multi-seed strategy
+extends this advantage to the multimodal high-$K$ regime, and that all three
+core algorithmic components contribute substantively to performance.

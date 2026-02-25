@@ -1,0 +1,209 @@
+\section{Methods}
+\label{sec:methods}
+
+\subsection{Probabilistic model}
+
+We adopt the binomial admixture model of \citet{alexander2009fast}.
+Let $\mathbf{G} \in \{0,1,2\}^{N \times M}$ denote the genotype matrix for
+$N$ individuals at $M$ biallelic SNPs, where $G_{ij}$ counts the number of
+copies of the alternate allele.
+The model posits $K$ ancestral populations characterised by two
+parameter matrices:
+the admixture proportion matrix $\mathbf{Q} \in [0,1]^{N \times K}$
+($\sum_k Q_{ik} = 1$ for all $i$) and the allele-frequency matrix
+$\mathbf{P} \in (0,1)^{M \times K}$.
+Under Hardy--Weinberg equilibrium within each ancestral population,
+the marginal genotype likelihood at locus $j$ for individual $i$ is
+
+\begin{equation}
+  P(G_{ij} \mid \mathbf{q}_i, \mathbf{p}_j)
+  = \binom{2}{G_{ij}} H_{ij}^{G_{ij}} (1 - H_{ij})^{2-G_{ij}},
+  \label{eq:likelihood}
+\end{equation}
+
+where $H_{ij} = \sum_k Q_{ik} P_{jk} = (\mathbf{Q}\mathbf{P}^{\top})_{ij}$
+is the expected frequency of the alternate allele in individual $i$.
+Summing over all loci and individuals (omitting constant combinatorial terms)
+yields the log-likelihood objective:
+
+\begin{equation}
+  \mathcal{L}(\mathbf{Q}, \mathbf{P})
+  = \sum_{i=1}^{N} \sum_{j=1}^{M}
+    \bigl[ G_{ij} \log H_{ij} + (2 - G_{ij}) \log(1 - H_{ij}) \bigr].
+  \label{eq:loglik}
+\end{equation}
+
+\noindent Both $\mathbf{Q}$ and $\mathbf{P}$ are estimated by
+maximum likelihood via the EM algorithm \citep{dempster1977maximum}.
+
+\subsection{GPU-native EM via matrix reformulation}
+
+The standard EM update for the admixture model \citep{alexander2009fast}
+involves per-individual and per-variant summations that are expressed here as
+dense matrix operations, making them directly amenable to GPU acceleration.
+
+\paragraph{E-step.}
+Given current parameters $(\mathbf{Q}^{(t)}, \mathbf{P}^{(t)})$, compute
+the mixture-frequency matrix $\mathbf{H} = \mathbf{Q}\mathbf{P}^{\top} \in \mathbb{R}^{N\times M}$
+and the fractional responsibilities
+
+\begin{equation}
+  \mathbf{R}^{-} = \frac{\mathbf{G}}{\mathbf{H}}, \qquad
+  \mathbf{R}^{+} = \frac{2 \cdot \mathbf{1} - \mathbf{G}}{\mathbf{1} - \mathbf{H}},
+\end{equation}
+
+where division is elementwise. $R^{-}_{ij}$ and $R^{+}_{ij}$ represent the
+expected contributions of minor and major alleles to individual $i$ at locus $j$.
+
+\paragraph{M-step.}
+The complete-data sufficient statistics factorize into two
+GEMM (General Matrix Multiply) operations:
+
+\begin{align}
+  \mathbf{P}^{(t+1)} &\propto \mathbf{P}^{(t)} \odot
+    \frac{(\mathbf{R}^{-})^{\top}\mathbf{Q}^{(t)}}
+         {2\,\mathbf{1}_{M}^{\top}\mathbf{Q}^{(t)}},
+  \label{eq:p_update} \\[4pt]
+  \mathbf{Q}^{(t+1)} &\propto \mathbf{Q}^{(t)} \odot
+    \bigl(\mathbf{R}^{-}\mathbf{P}^{(t)} + \mathbf{R}^{+}(\mathbf{1}-\mathbf{P}^{(t)})\bigr),
+  \label{eq:q_update}
+\end{align}
+
+where $\odot$ is elementwise multiplication and $\propto$ denotes
+row-normalisation (for $\mathbf{Q}$) or clipping to $(0,1)$ (for $\mathbf{P}$).
+The dominant cost is the three dense matrix products
+$\mathbf{Q}\mathbf{P}^{\top}$, $(\mathbf{R}^{-})^{\top}\mathbf{Q}$, and
+$\mathbf{R}^{-}\mathbf{P}$, each computable in $O(NMK)$ FLOPS.
+On a GPU, these operations map directly to cuBLAS \texttt{SGEMM} calls,
+which achieve near-peak throughput for large $N$, $M$, and $K$.
+All matrices are stored as 32-bit floating-point tensors in GPU VRAM,
+and implemented using PyTorch \citep{paszke2019pytorch} for portability
+across GPU architectures.
+
+\subsection{Nesterov momentum acceleration}
+\label{sec:nesterov}
+
+Vanilla EM is monotone-increasing but can converge slowly near saddle points.
+We incorporate Nesterov momentum \citep{nesterov1983method} directly in the
+iterate space of $(\mathbf{Q}, \mathbf{P})$, drawing on a line of work
+connecting first-order acceleration to EM \citep{varadhan2008simple}.
+
+Before each E--M step pair, we form the \emph{extrapolated iterates}
+
+\begin{equation}
+  \tilde{\mathbf{Q}}^{(t)} = \mathbf{Q}^{(t)} + \alpha_t
+    \bigl(\mathbf{Q}^{(t)} - \mathbf{Q}^{(t-1)}\bigr), \qquad
+  \tilde{\mathbf{P}}^{(t)} = \mathbf{P}^{(t)} + \alpha_t
+    \bigl(\mathbf{P}^{(t)} - \mathbf{P}^{(t-1)}\bigr),
+  \label{eq:nesterov}
+\end{equation}
+
+with the Nesterov coefficient $\alpha_t = (t-1)/(t+2)$,
+and then apply the EM update from $(\tilde{\mathbf{Q}}^{(t)},\tilde{\mathbf{P}}^{(t)})$.
+After extrapolation, $\tilde{\mathbf{Q}}$ is projected onto the probability
+simplex and $\tilde{\mathbf{P}}$ is clipped to $(10^{-6}, 1-10^{-6})$
+to maintain valid parameters.
+If the extrapolated iterate decreases the observed log-likelihood relative to
+the current iterate, the step is reset to the non-extrapolated EM update
+($\alpha_t \leftarrow 0$), preserving the monotone ascent guarantee for
+that iteration.
+
+\subsection{Stochastic mini-batch EM}
+
+To accelerate per-epoch computation and improve exploration of the likelihood
+landscape, we partition the $M$ SNPs into $B$ random mini-batches per epoch.
+In each epoch, the $B$ batches are processed sequentially: for each batch
+of $M/B$ SNPs, a full E--M pass updates both $\mathbf{Q}$ and $\mathbf{P}$
+using only those SNPs.
+Because $\mathbf{Q}$ is updated $B$ times per epoch (once per batch),
+convergence requires fewer epochs than full-batch EM.
+In practice, mini-batch noise acts as an implicit perturbation that helps
+escape shallow local optima in the admixture likelihood landscape.
+The default batch count $B$ is set to $\lfloor M / 12{,}500 \rfloor$
+based on a grid search over the 1000 Genomes Project dataset.
+
+\subsection{Streaming randomised SVD initialisation}
+
+A principled starting point is critical for EM in the admixture model
+\citep{meisner2024fast}.
+We initialise $(\mathbf{Q}, \mathbf{P})$ from a rank-$K$ approximation of the
+centred genotype matrix $\mathbf{G}_c = \mathbf{G} - 2\hat{\mathbf{p}}\mathbf{1}^{\top}$
+(where $\hat{p}_j = \overline{G}_{\cdot j}/2$ is the sample minor allele frequency),
+using the randomised SVD algorithm of \citet{halko2011finding}.
+For large $N$, forming $\mathbf{G}_c\mathbf{G}_c^{\top}$ directly would require
+$O(N^2 M)$ FLOPS and $O(N^2)$ memory.
+Instead, we process $\mathbf{G}_c$ in column blocks of fixed size,
+streaming the block Gram contributions into an accumulator without ever
+materialising the full outer-product matrix.
+The resulting compact $K \times K$ factor is then decomposed by standard SVD
+to yield the initialisation.
+$\mathbf{Q}^{(0)}$ and $\mathbf{P}^{(0)}$ are constructed from the leading
+singular vectors and projected onto their respective feasible sets.
+
+\subsection{CLUMPAK-lite: cross-run label alignment}
+
+A known complication of EM-based ancestry inference is label switching: the
+$K!$ permutations of ancestral population indices produce equivalent likelihood
+values, so independent runs with different random seeds may label the same
+ancestry component differently \citep{jakobsson2007clumpp, kopelman2015clumpak}.
+We implement \textsc{CLUMPAK-lite}, a pure-Python label-alignment module that
+resolves this in two stages.
+
+\paragraph{Within-$K$ alignment.}
+Given $S$ independent runs at the same $K$, one run is designated reference.
+All others are aligned to it by finding the column permutation $\pi$ of
+$\mathbf{Q}_s$ (and identically of $\mathbf{P}_s$) that maximises the sum of
+pairwise Pearson correlations between aligned column pairs.
+This is equivalent to a maximum-weight bipartite matching and is solved exactly
+using the Hungarian algorithm \citep{kuhn1955hungarian} in $O(K^3)$ time.
+The across-seed consistency is quantified by the within-$K$ RMSE between
+all aligned $\mathbf{Q}$ matrices and their centroid,
+serving as an empirical multimodality diagnostic:
+high RMSE indicates genuinely distinct local optima, while low RMSE
+confirms that all seeds converged to the same basin.
+
+\paragraph{Across-$K$ alignment.}
+To produce coherent structure plots across increasing $K$, ancestral components
+are aligned bottom-up from $K=2$ to $K=K_{\max}$ by greedy matching:
+at each step, the $K-1$ components of the aligned $K$-solution are matched to
+the nearest column of the $K$-solution using Pearson correlation as the
+similarity metric.
+The unmatched column represents the novel component introduced at that $K$.
+This procedure ensures that components representing the same ancestry cluster
+retain consistent colour and position across panels of the structure plot.
+
+\subsection{Multi-GPU parallel K selection}
+
+Selecting the optimal number of ancestral populations $K$ typically requires
+running the model for several values of $K$ and evaluating model-fit criteria
+such as the Bayesian Information Criterion \citep{schwarz1978estimating}
+or the cross-validation error of \citet{alexander2011genomics}.
+Because each value of $K$ is an independent optimisation problem,
+gpuADMIX dispatches the $K = 2, \ldots, K_{\max}$ runs in parallel across
+all available GPUs using Python's \texttt{multiprocessing} module,
+with each process pinned to a dedicated device via \texttt{torch.cuda.set\_device()}.
+On an 8-GPU server, the full $K = 2$--$10$ sweep at five random seeds each
+completes in approximately 130\,s—a 5.3$\times$ speedup over serial execution.
+
+\subsection{Cross-validation for K selection}
+\label{sec:methods:cv}
+
+We implement a 5-fold SNP hold-out cross-validation to provide a data-driven,
+model-free estimate of optimal $K$.
+SNPs are randomly partitioned into five folds; for each fold the model is
+trained on the remaining 80\% of SNPs and the admixture proportions $\mathbf{Q}$
+are used as fixed features to estimate allele frequencies $\mathbf{P}_{\text{test}}$
+for the held-out 20\% of SNPs via 30 iterations of the M-step with $\mathbf{Q}$ frozen.
+The cross-validation score for a given $K$ is the mean hold-out log-likelihood
+across all five folds; the optimal $K$ maximises this score.
+
+\subsection{Implementation}
+
+\gpu{} is implemented in Python using PyTorch~1.13+ for GPU tensor operations
+and supports PLINK BED format \citep{purcell2007plink} natively via a
+memory-efficient bit-unpacking reader.
+All benchmarks were performed on an NVIDIA L20 GPU (48\,GB VRAM) for
+\gpu{} and an Intel Xeon Platinum 8375C CPU (32 threads) for \fm{} and
+\admix{}.
+Software and reproducibility scripts are available at
+\url{https://github.com/[REPO]}.

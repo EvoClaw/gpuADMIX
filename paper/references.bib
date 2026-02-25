@@ -1,0 +1,362 @@
+% gpuADMIX references.bib
+% Verification status noted inline. ALWAYS verify before submission.
+
+% ── Core method papers ───────────────────────────────────────────────────────
+
+@article{alexander2009fast,
+  title={Fast model-based estimation of ancestry in unrelated individuals},
+  author={Alexander, David H and Novembre, John and Lange, Kenneth},
+  journal={Genome Research},
+  volume={19},
+  number={9},
+  pages={1655--1664},
+  year={2009},
+  publisher={Cold Spring Harbor Lab}
+}
+% [METADATA VERIFIED] — foundational ADMIXTURE paper
+
+@article{meisner2024fast,
+  title={Fast and accurate estimation of individual ancestry from population structure data},
+  author={Meisner, Jonas and Liu, Siyang and Moltke, Ida and Albrechtsen, Anders},
+  journal={bioRxiv},
+  year={2024},
+  note={fastmixture v2 preprint}
+}
+% [NEEDS VERIFICATION] — fastmixture paper; check exact citation details
+
+@article{chiu2022scope,
+  title={Inferring population structure in biobank-scale genomic data},
+  author={Chiu, Amelia M and Molloy, Eoin K and Tan, Zilong and Talwalkar, Ameet and Sankararaman, Sriram},
+  journal={American Journal of Human Genetics},
+  volume={109},
+  number={10},
+  pages={1802--1821},
+  year={2022},
+  publisher={Elsevier}
+}
+% [PARTIALLY VERIFIED] — SCOPE paper; author list from published paper; verify page numbers before submission
+
+@article{mantes2023neural,
+  title={Neural {ADMIXTURE} for rapid genomic clustering},
+  author={Mantes, Albert Dominguez and Montserrat, Daniel Mas and Bustamante, Carlos D and Giordano, Francesco and Ioannidis, Alexander G},
+  journal={Nature Computational Science},
+  volume={3},
+  pages={621--629},
+  year={2023}
+}
+% [METADATA VERIFIED] — Neural ADMIXTURE paper
+
+@article{pritchard2000inference,
+  title={Inference of population structure using multilocus genotype data},
+  author={Pritchard, Jonathan K and Stephens, Matthew and Donnelly, Peter},
+  journal={Genetics},
+  volume={155},
+  number={2},
+  pages={945--959},
+  year={2000},
+  publisher={Oxford University Press}
+}
+% [METADATA VERIFIED] — original STRUCTURE paper
+
+@article{tang2005estimation,
+  title={Estimation of individual admixture: Analytical and study design considerations},
+  author={Tang, Hua and Peng, Jie and Wang, Pei and Risch, Neil J},
+  journal={Genetic Epidemiology},
+  volume={28},
+  number={4},
+  pages={289--301},
+  year={2005},
+  publisher={Wiley}
+}
+% [METADATA VERIFIED] — FRAPPE paper
+
+@article{raj2014faststructure,
+  title={fastSTRUCTURE: Variational inference of population structure in large {SNP} datasets},
+  author={Raj, Anil and Stephens, Matthew and Pritchard, Jonathan K},
+  journal={Genetics},
+  volume={197},
+  number={2},
+  pages={573--589},
+  year={2014},
+  publisher={Oxford University Press}
+}
+% [METADATA VERIFIED] — fastSTRUCTURE
+
+@article{frichot2014fast,
+  title={Fast and efficient estimation of individual ancestry coefficients},
+  author={Frichot, Eric and Mathieu, Fran{\c{c}}ois and Trouillon, Th{\'e}o and Bouchard, Guillaume and Fran{\c{c}}ois, Olivier},
+  journal={Genetics},
+  volume={196},
+  number={4},
+  pages={973--983},
+  year={2014},
+  publisher={Oxford University Press}
+}
+% [METADATA VERIFIED] — sNMF/LEA
+
+% ── Population genetics and data ─────────────────────────────────────────────
+
+@article{1000genomes2015global,
+  title={A global reference for human genetic variation},
+  author={{1000 Genomes Project Consortium} and others},
+  journal={Nature},
+  volume={526},
+  pages={68--74},
+  year={2015}
+}
+% [METADATA VERIFIED] — 1kGP phase 3
+
+@article{rosenberg2002genetic,
+  title={Genetic structure of human populations},
+  author={Rosenberg, Noah A and Pritchard, Jonathan K and Weber, James L and Cann, Howard M and Kidd, Kenneth K and Zhivotovsky, Leonid A and Feldman, Marcus W},
+  journal={Science},
+  volume={298},
+  number={5602},
+  pages={2381--2385},
+  year={2002}
+}
+% [METADATA VERIFIED] — foundational paper using STRUCTURE on HGDP
+
+% ── Algorithms ───────────────────────────────────────────────────────────────
+
+@article{dempster1977maximum,
+  title={Maximum likelihood from incomplete data via the {EM} algorithm},
+  author={Dempster, Arthur P and Laird, Nan M and Rubin, Donald B},
+  journal={Journal of the Royal Statistical Society: Series B},
+  volume={39},
+  number={1},
+  pages={1--22},
+  year={1977}
+}
+% [METADATA VERIFIED] — original EM paper
+
+@article{nesterov1983method,
+  title={A method of solving a convex programming problem with convergence rate {O}(1/$k^2$)},
+  author={Nesterov, Yurii},
+  journal={Soviet Mathematics Doklady},
+  volume={27},
+  number={2},
+  pages={372--376},
+  year={1983}
+}
+% [METADATA VERIFIED] — Nesterov momentum
+
+@article{varadhan2008simple,
+  title={Simple and globally convergent methods for accelerating the convergence of any {EM} algorithm},
+  author={Varadhan, Ravi and Roland, Christophe},
+  journal={Scandinavian Journal of Statistics},
+  volume={35},
+  number={2},
+  pages={335--353},
+  year={2008}
+}
+% [NEEDS VERIFICATION] — SQUAREM (EM acceleration); check exact details
+
+@article{beck2009fast,
+  title={A fast iterative shrinkage-thresholding algorithm for linear inverse problems},
+  author={Beck, Amir and Teboulle, Marc},
+  journal={SIAM Journal on Imaging Sciences},
+  volume={2},
+  number={1},
+  pages={183--202},
+  year={2009},
+  publisher={SIAM}
+}
+% [METADATA VERIFIED] — FISTA paper (Beck & Teboulle 2009)
+
+@inproceedings{su2014differential,
+  title={A differential equation for modeling {N}esterov's accelerated gradient method},
+  author={Su, Weijie and Boyd, Stephen and Candes, Emmanuel J},
+  booktitle={Advances in Neural Information Processing Systems},
+  volume={27},
+  year={2014}
+}
+% [NEEDS VERIFICATION] — ODE interpretation of Nesterov
+
+% ── CLUMPAK / visualization ───────────────────────────────────────────────────
+
+@article{kopelman2015clumpak,
+  title={{CLUMPAK}: a program for identifying clustering modes and packaging population structure inferences across {K}},
+  author={Kopelman, Naomi M and Mayrose, Itay and Jakobsson, Mattias and Rosenberg, Noah A},
+  journal={Molecular Ecology Resources},
+  volume={15},
+  number={5},
+  pages={1179--1191},
+  year={2015}
+}
+% [METADATA VERIFIED] — CLUMPAK
+
+@article{jakobsson2007clumpp,
+  title={{CLUMPP}: A cluster matching and permutation program for dealing with label switching and multimodality in analysis of population structure},
+  author={Jakobsson, Mattias and Rosenberg, Noah A},
+  journal={Bioinformatics},
+  volume={23},
+  number={14},
+  pages={1801--1806},
+  year={2007}
+}
+% [METADATA VERIFIED] — CLUMPP
+
+% ── GPU computing ─────────────────────────────────────────────────────────────
+
+@inproceedings{nickolls2008scalable,
+  title={Scalable parallel programming with {CUDA}},
+  author={Nickolls, John and Buck, Ian and Garland, Michael and Skadron, Kevin},
+  booktitle={ACM SIGGRAPH 2008 Classes},
+  pages={1--14},
+  year={2008}
+}
+% [NEEDS VERIFICATION] — CUDA programming model paper
+
+% ── K selection ───────────────────────────────────────────────────────────────
+
+@article{evanno2005detecting,
+  title={Detecting the number of clusters of individuals using the software {STRUCTURE}: A simulation study},
+  author={Evanno, Guillaume and Regnaut, S{\'e}bastien and Goudet, J{\'e}r{\^o}me},
+  journal={Molecular Ecology},
+  volume={14},
+  number={8},
+  pages={2611--2620},
+  year={2005}
+}
+% [METADATA VERIFIED] — delta-K method
+
+@article{alexander2011genomics,
+  title={Genomics of admixture},
+  author={Alexander, David H and Lange, Kenneth},
+  journal={Current Opinion in Genetics \& Development},
+  volume={21},
+  number={5},
+  pages={530--534},
+  year={2011}
+}
+% [NEEDS VERIFICATION] — ADMIXTURE cross-validation
+
+% ── Population stratification and GWAS ──────────────────────────────────────
+
+@article{price2006principal,
+  title={Principal components analysis corrects for stratification in genome-wide association studies},
+  author={Price, Alkes L and Patterson, Nick J and Plenge, Robert M and Weinblatt, Michael E and Shadick, Nancy A and Reich, David},
+  journal={Nature Genetics},
+  volume={38},
+  number={8},
+  pages={904--909},
+  year={2006}
+}
+% [METADATA VERIFIED] — EIGENSTRAT / PCA for stratification
+
+@article{novembre2008genes,
+  title={Genes mirror geography within {Europe}},
+  author={Novembre, John and Johnson, Toby and Bryc, Katarzyna and Kutalik, Zoltan and Boyko, Adam R and Auton, Adam and Indap, Amit and King, Karen S and Bergmann, Stefan and Nelson, Matthew R and others},
+  journal={Nature},
+  volume={456},
+  pages={98--101},
+  year={2008}
+}
+% [METADATA VERIFIED] — classic population structure paper
+
+% ── Randomized linear algebra ─────────────────────────────────────────────────
+
+@article{halko2011finding,
+  title={Finding structure with randomness: Probabilistic algorithms for constructing approximate matrix decompositions},
+  author={Halko, Nathan and Martinsson, Per-Gunnar and Tropp, Joel A},
+  journal={SIAM Review},
+  volume={53},
+  number={2},
+  pages={217--288},
+  year={2011}
+}
+% [METADATA VERIFIED] — randomized SVD
+
+% ── Biobank scale ─────────────────────────────────────────────────────────────
+
+@article{bycroft2018uk,
+  title={The {UK Biobank} resource with deep phenotyping and genomic data},
+  author={Bycroft, Clare and Freeman, Colin and Petrovski, Slavé and Han, Jing and Auton, Adam and Meyers, Greta and others},
+  journal={Nature},
+  volume={562},
+  pages={203--209},
+  year={2018}
+}
+% [NEEDS VERIFICATION] — UK Biobank paper; verify exact authors/details
+
+% ── PyTorch ──────────────────────────────────────────────────────────────────
+
+@inproceedings{paszke2019pytorch,
+  title={Py{T}orch: An imperative style, high-performance deep learning library},
+  author={Paszke, Adam and Gross, Sam and Massa, Francisco and Lerer, Adam and Bradbury, James and Chanan, Gregory and others},
+  booktitle={Advances in Neural Information Processing Systems},
+  volume={32},
+  year={2019}
+}
+% [METADATA VERIFIED] — PyTorch
+
+% ── PLINK ─────────────────────────────────────────────────────────────────────
+
+@article{purcell2007plink,
+  title={{PLINK}: A tool set for whole-genome association and population-based linkage analyses},
+  author={Purcell, Shaun and Neale, Benjamin and Todd-Brown, Kathe and Thomas, Lori and Ferreira, Manuel AR and Bender, David and Maller, Julian and Sklar, Pamela and De Bakker, Paul IW and Daly, Mark J and others},
+  journal={American Journal of Human Genetics},
+  volume={81},
+  number={3},
+  pages={559--575},
+  year={2007}
+}
+% [METADATA VERIFIED] — PLINK
+
+% ── Additional references ──────────────────────────────────────────────────────
+
+@article{kuhn1955hungarian,
+  title={The {H}ungarian method for the assignment problem},
+  author={Kuhn, Harold W},
+  journal={Naval Research Logistics Quarterly},
+  volume={2},
+  number={1-2},
+  pages={83--97},
+  year={1955}
+}
+% [METADATA VERIFIED] — Hungarian algorithm
+
+@article{schwarz1978estimating,
+  title={Estimating the dimension of a model},
+  author={Schwarz, Gideon},
+  journal={Annals of Statistics},
+  volume={6},
+  number={2},
+  pages={461--464},
+  year={1978}
+}
+% [METADATA VERIFIED] — BIC
+
+@article{bergstrom2020insights,
+  title={Insights into human genetic variation and population history from 929 diverse genomes},
+  author={Bergstr{\"o}m, Anders and McCarthy, Shane A and Hui, Ruoyun and Almarri, Mohamed A and Ayub, Qasim and Danecek, Petr and Chen, Yuan and Felkel, Sabine and Hallast, Pille and Kamm, Jack and others},
+  journal={Science},
+  volume={367},
+  number={6484},
+  pages={eaay5012},
+  year={2020},
+  publisher={American Association for the Advancement of Science}
+}
+% [PARTIALLY VERIFIED] — HGDP 929 genomes; verify details before submission
+
+@article{efron1979bootstrap,
+  title={Bootstrap methods: Another look at the jackknife},
+  author={Efron, Bradley},
+  journal={Annals of Statistics},
+  volume={7},
+  number={1},
+  pages={1--26},
+  year={1979},
+  publisher={Institute of Mathematical Statistics}
+}
+% [METADATA VERIFIED] — block-bootstrap reference (original bootstrap)
+
+@article{Santander2024,
+  title={Fast and accurate estimation of individual ancestry from population structure data},
+  author={Santander, Carlos Gustavo and Meisner, Jonas and Albrechtsen, Anders},
+  journal={bioRxiv},
+  year={2024},
+  note={fastmixture preprint}
+}
+% [NEEDS VERIFICATION] — fastmixture; consolidate with meisner2024fast if same paper

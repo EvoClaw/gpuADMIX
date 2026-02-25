@@ -1,0 +1,28 @@
+% Table 1: Main performance comparison at K=5
+\begin{table*}[t]
+\centering
+\caption{%
+  Performance at $K=5$ on the 1000 Genomes Phase\,3 dataset
+  (3,202 individuals, 200K LD-pruned SNPs).
+  Wall time: mean $\pm$ s.d.\ across five runs (\gpu{}, \fm{})
+  or a single run (\admix{}, runtime-limited).
+  $Q$~$r^2$: mean per-component Pearson~$r^2$ vs \admix{}~$Q$
+  after Hungarian alignment.
+  Speedup relative to \admix{}.
+  Hardware: NVIDIA L20 GPU (\gpu{});
+  Intel Xeon Platinum 8375C 32-thread CPU (\fm{}, \admix{}).%
+}
+\label{tab:main}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrr}
+  \toprule
+  Method & Wall time (s) & Speedup vs \admix{} & Log-likelihood & $Q$ $r^2$ vs \admix{} \\
+  \midrule
+  \admix{} & 3{,}583        & $1\times$            & $-241{,}227{,}839$           & 1.000000 \\
+  \fm{}     & $694 \pm 40$  & $5\times$            & $-241{,}227{,}643 \pm 0.3$   & 0.999984 \\
+  \gpu{}    & $\mathbf{16.8 \pm 3.4}$ & $\mathbf{213\times}$ &
+              $\mathbf{-241{,}224{,}751 \pm 98}$ & $\mathbf{0.999987}$ \\
+  \bottomrule
+\end{tabular}%
+}
+\end{table*}

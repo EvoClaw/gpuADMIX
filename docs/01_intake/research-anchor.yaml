@@ -1,0 +1,47 @@
+# research-anchor.yaml — Global Project Anchor File
+# Location: docs/01_intake/research-anchor.yaml
+
+domain: "bioinformatics"
+subdomain: "population-genetics / ancestry-estimation"
+research_type: "H"               # H=Hybrid: new algorithmic method + computational tool deliverable
+research_type_locked: false
+
+expert_persona: "computational population geneticist with expertise in probabilistic models (admixture/structure models), variational inference, GPU-accelerated optimization, and high-performance bioinformatics software development"
+reviewer_focus:
+  - "accuracy vs ADMIXTURE on standard benchmarks (1kGP, HGDP) — must not be worse"
+  - "scalability: runtime and memory as N (samples) and M (SNPs) grow"
+  - "method novelty: what algorithmic innovation enables the speedup?"
+  - "reproducibility: random seed stability, cross-run convergence"
+  - "software quality: installability, documentation, PLINK/ADMIXTURE format compatibility"
+  - "biological utility: K clusters match known population structure (26 1kGP pops)"
+  - "statistical validity: log-likelihood convergence, cross-validation for K selection"
+
+target_venue:
+  primary: "Bioinformatics (Oxford Academic)"
+  alternatives: ["Genome Research", "PLOS Genetics", "Briefings in Bioinformatics", "Nature Methods"]
+  tier: "A"
+  venue_locked: false
+
+venue_constraints:
+  page_limit: null
+  format: "oxford_bioinformatics"
+  expected_figures: "4-6"
+  expected_tables: "2-3"
+  writing_style: "formal, concise, evidence-driven"
+
+resources:
+  compute: "multi-GPU server"
+  compute_budget: ""
+  submission_deadline: ""
+  data_status: "user-provided (1000 Genomes Project, LD-pruned 200K SNPs, 3202 samples, 26 populations, PLINK BED format + samples.info). User confirmed: 200K LD-pruned sufficient; no full SNP download needed."
+
+project_intent: "efficiency"         # Build faster alternative to ADMIXTURE with matching accuracy
+value_proposition: "First GPU-accelerated model-based admixture tool achieving ADMIXTURE-level accuracy, enabling biobank-scale analyses impractical with CPU-only methods"           # Filled in Phase 3
+innovation_point: "GPU-native mini-batch EM + Nesterov momentum for binomial admixture likelihood; multi-GPU parallel K selection; block-bootstrap UQ at scale"            # Filled in Phase 3
+story_line: ""                  # Filled in Phase 3
+primary_track: ""               # N/A for Type C
+
+confirmed_by_user: true
+confirmed_at: ""
+last_modified: "2026-02-25"
+modification_log: []

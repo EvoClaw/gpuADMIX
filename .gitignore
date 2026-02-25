@@ -1,0 +1,55 @@
+# ── Genotype data (large binary files, not redistributable) ─────────────────
+*.bed
+*.bim
+*.fam
+*.nosex
+*.log
+ld_prunedothers/
+
+# ── Run output directories (regenerate with scripts) ────────────────────────
+results/gpuadmix/
+results/fastmixture/
+results/admixture_k5/
+results/fastmixture_k5/
+results/gpuadmix_k5/
+results/aligned/
+
+# ── NumPy / binary arrays ────────────────────────────────────────────────────
+*.npy
+*.npz
+
+# ── Python cache ─────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# ── LaTeX build artifacts ────────────────────────────────────────────────────
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.log
+paper/*.out
+paper/*.toc
+paper/*.lof
+paper/*.lot
+paper/*.synctex.gz
+
+# ── Downloaded LaTeX packages (reproducible via make or instructions) ────────
+paper/*.zip
+paper/algorithmicx/
+paper/oup-authoring-template/
+paper/algorithm.sty
+paper/algcompatible.sty
+paper/algc.sty
+paper/algmatlab.sty
+paper/algorithmicx.sty
+paper/algpascal.sty
+paper/algpseudocode.sty
+
+# ── Editor / OS ──────────────────────────────────────────────────────────────
+.DS_Store
+.venv/
+*.egg-info/
+dist/
+build/

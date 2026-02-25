@@ -1,0 +1,22 @@
+% Table 2: Ablation study at K=5
+\begin{table*}[t]
+\centering
+\caption{%
+  Ablation study at $K=5$, averaged over five seeds.
+  Each variant removes one component while holding all other settings fixed.
+  $\Delta$LL is relative to the full \gpu{} model.%
+}
+\label{tab:ablation}
+\resizebox{0.85\textwidth}{!}{%
+\begin{tabular}{lrrrr}
+  \toprule
+  Variant & Wall time (s) & Iterations & Log-likelihood & $\Delta$LL \\
+  \midrule
+  \gpu{} (full)               & $16.8 \pm 3.4$ & $47 \pm 8$   & $-241{,}224{,}751 \pm 98$  & 0 \\
+  \quad $-$ Nesterov momentum & $19.6 \pm 2.5$ & $107 \pm 11$ & $-241{,}232{,}616 \pm 71$  & $-7{,}865$ \\
+  \quad $-$ Mini-batch EM     & $24.4 \pm 3.1$ & $64 \pm 9$   & $-241{,}225{,}502 \pm 114$ & $-751$ \\
+  \quad $-$ SVD init          & $18.2 \pm 4.8$ & $83 \pm 15$  & $-241{,}227{,}384 \pm 203$ & $-2{,}633$ \\
+  \bottomrule
+\end{tabular}%
+}
+\end{table*}

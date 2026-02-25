@@ -1,0 +1,26 @@
+% ─── Packages ────────────────────────────────────────────────────────────────
+% NOTE: natbib, hyperref, graphicx are already loaded by oup-authoring-template
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage[protrusion=false,expansion=false]{microtype}
+\usepackage{tabularx}
+\usepackage{threeparttable}
+\usepackage{dcolumn}
+\usepackage{adjustbox}   % for \resizebox / adjustbox on tables
+
+% ─── Macros ──────────────────────────────────────────────────────────────────
+\newcommand{\gpu}{\textsc{gpuADMIX}}
+\newcommand{\fm}{\textsc{fastmixture}}
+\newcommand{\admix}{\textsc{ADMIXTURE}}
+\newcommand{\nadmix}{\textsc{Neural ADMIXTURE}}
+\newcommand{\clite}{\textsc{CLUMPAK-lite}}
+
+\newcommand{\CITATION}[1]{\textcolor{red}{[#1 — CITATION NEEDED]}}
+
+% bold / underline best results in tables
+\newcommand{\best}[1]{\textbf{#1}}
+\newcommand{\second}[1]{\underline{#1}}

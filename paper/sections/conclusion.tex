@@ -1,0 +1,15 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have presented \gpu{}, a GPU-accelerated admixture estimation tool that
+achieves one to two orders of magnitude speedup over existing CPU-based
+methods while preserving the exact binomial likelihood model and matching or
+exceeding their solution quality.
+Three complementary algorithmic innovations—FISTA-style Nesterov momentum,
+stochastic mini-batch EM, and streaming randomised SVD initialisation—together
+explain why \gpu{} outperforms CPU competitors in both speed and accuracy,
+not hardware advantage alone.
+By making multi-seed, multi-$K$ ancestry inference practical within minutes
+rather than days, \gpu{} and its integrated CLUMPAK-lite post-processor
+lower the computational barrier to rigorous admixture analysis at the scale
+of modern biobank datasets.

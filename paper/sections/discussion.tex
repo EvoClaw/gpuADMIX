@@ -1,0 +1,124 @@
+\section{Discussion}
+\label{sec:discussion}
+
+The central question motivating \gpu{} is whether GPU acceleration of
+model-based ancestry estimation requires sacrificing the principled
+probabilistic framework that makes methods such as \admix{} trustworthy for
+downstream analyses.
+Our results demonstrate that it does not: by reformulating the admixture EM
+updates as GPU-native dense matrix multiplications and augmenting them with
+FISTA-style Nesterov momentum, stochastic mini-batch EM, and streaming
+randomised SVD initialisation, \gpu{} achieves $41\times$ faster inference
+than \fm{} while matching or exceeding its log-likelihood and producing
+admixture proportion matrices that are virtually identical to those of \admix{}
+($Q\,r^2 > 0.9999$).
+
+%-------------------------------------------------------------------
+\subsection{Reconciling GPU speed with model-based accuracy}
+
+Prior GPU-accelerated methods for ancestry estimation have pursued speed
+through model approximations.
+Neural ADMIXTURE \citep{mantes2023neural} trains a neural network surrogate
+for the admixture model, achieving fast inference but yielding markedly
+reduced self-consistency across SNP subsets (reported $r^2 \approx 0.72$
+between full and downsampled 1kGP runs; \citealt{meisner2024fast}), suggesting
+that the neural parameterisation memorises rather than generalises.
+SCOPE \citep{chiu2022scope} departs from the likelihood-based EM framework
+entirely, replacing it with a principal-component objective that runs
+efficiently on GPU but loses the interpretable per-population allele
+frequencies that practitioners rely on for biological annotation.
+\gpu{}, by contrast, preserves the exact ADMIXTURE binomial likelihood:
+both the E-step and M-step are reformulated as \textsc{dgemm} calls without
+any approximation to the model.
+The FISTA-style Nesterov momentum contributes further by yielding $7{,}865$
+additional log-likelihood units over plain EM in ablation (Table~\ref{tab:ablation});
+empirically, this gain is consistent with the accelerated updates visiting
+more of the likelihood surface during early iterations, though we caution
+that formal convergence guarantees for FISTA apply to convex objectives and
+the admixture landscape is non-convex.
+Taken together, these design choices explain why \gpu{} achieves \emph{higher}
+likelihood than \fm{}'s SQUAREM-accelerated \citep{varadhan2008simple} CPU EM
+at $K=5$, rather than merely matching it.
+
+%-------------------------------------------------------------------
+\subsection{Multi-seed inference: a new practical default}
+
+The EM objective for admixture models is well-known to be multimodal
+\citep{jakobsson2007clumpp}, and our run-stability analysis confirms that this
+becomes practically significant at $K \geq 8$: the mean pairwise RMSE across
+five seeds rises from below 0.02 at $K \leq 7$ to approximately 0.04 at
+$K = 9$--$10$.
+Classical CPU workflows are largely constrained to one or two random restarts
+because each seed at high~$K$ may cost tens of minutes.
+\gpu{} changes this calculus: five seeds at any $K \leq 10$ complete in under
+300 seconds—less than the wall time of a single \fm{} run—so multi-seed
+inference incurs no additional opportunity cost relative to the CPU baseline.
+We acknowledge that the best-of-five comparison uses five times the compute of
+a single \gpu{} run; the justification is that this total budget is still
+smaller than a single \fm{} run, making it the economically optimal strategy.
+Empirically, the best-of-five \gpu{} seed surpasses the best-of-five \fm{}
+seed at every $K$ tested, suggesting that the admixture landscape contains
+high-quality optima that Nesterov momentum finds and that SQUAREM alone does
+not.
+On practical grounds, we recommend running at least five seeds for $K \geq 8$
+and reporting the run with the highest log-likelihood alongside the
+run-stability RMSE.
+
+%-------------------------------------------------------------------
+\subsection{$K$ selection: complementary criteria}
+
+The cross-validation optimum ($K=9$) and the BIC minimum ($K=4$) are
+complementary rather than contradictory signals.
+BIC applies a strong parameter penalty—$(K-1)(N+M)$ additional free
+parameters for each increment in $K$—that discourages detecting
+sub-continental structure unless it is overwhelmingly supported by the data.
+The 5-fold hold-out log-likelihood is more sensitive to fine-grained
+differentiation and rewards any model that improves prediction of
+held-out genotypes, favouring the additional sub-continental components
+visible at $K=9$.
+In practice, the choice of $K$ should be driven by the analytical goal:
+$K=5$ is both biologically interpretable (five major continental ancestry
+groups in the 1000 Genomes data) and numerically stable (run-RMSE $=0.02$);
+$K=9$ captures finer structure but is only consistently recoverable with a
+multi-seed strategy.
+The run-stability RMSE from \clite{} provides a complementary diagnostic
+that is invisible to likelihood-only criteria and helps practitioners
+identify $K$ values where a single run may be misleading.
+
+%-------------------------------------------------------------------
+\subsection{Limitations}
+
+Several limitations constrain the current work.
+First, our speedup comparisons pair a single NVIDIA L20 GPU against a 32-core
+server CPU; the reported $41\times$ speedup over \fm{} reflects a
+platform-level advantage that combines hardware throughput with algorithmic
+improvements.
+A single-threaded or FLOP-normalised comparison would isolate the algorithmic
+contribution; we leave this to future work.
+Second, evaluation is restricted to the 1000 Genomes Phase\,3 dataset;
+a second real dataset such as HGDP \citep{bergstrom2020insights} would
+strengthen claims about generalisation.
+Third, our ablation study is conducted at $K=5$; the relative contributions
+of Nesterov momentum and mini-batch EM at $K \geq 8$, where the landscape
+is more rugged, are unknown.
+Fourth, \gpu{} assumes Hardy--Weinberg equilibrium within ancestral
+populations and linkage equilibrium across SNPs; we mitigate the latter
+by using LD-pruned input variants, but residual LD may inflate the
+effective sample size and should be considered when interpreting results
+from high-LD regions.
+Fifth, the tool currently provides point estimates for $\mathbf{Q}$ and
+$\mathbf{P}$; block-bootstrap confidence intervals \citep{efron1979bootstrap}
+are planned for a future release.
+
+%-------------------------------------------------------------------
+\subsection{Outlook}
+
+The streaming SVD design positions \gpu{} for datasets substantially larger
+than those tested here.
+Scaling to biobank cohorts (${>}100{,}000$ individuals) will require
+prefetching pipelines to overlap GPU compute with host-to-device data
+transfer; validation at this scale remains future work.
+Multi-GPU parallelisation across $K$ values—already demonstrated at $K=2$--$10$
+on eight GPUs—further enables full $K$ sweeps with integrated cross-validation
+to complete in a single interactive session, transforming ancestry estimation
+from an overnight computational job into a responsive analysis tool.

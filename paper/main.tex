@@ -1,0 +1,68 @@
+% gpuADMIX — Main Paper
+% Target: Bioinformatics (Oxford Academic), Original Article
+\documentclass[contemporary,namedate,webpdf,large]{oup-authoring-template}
+
+\input{preamble}
+
+% ── Journal metadata ──────────────────────────────────────────────────────────
+\journaltitle{Bioinformatics}
+\DOI{DOI HERE}
+\copyrightyear{2026}
+\pubyear{2026}
+\access{Advance Access Publication Date: Day Month Year}
+\appnotes{Original Article}
+
+\begin{document}
+
+\firstpage{1}
+
+\title[gpuADMIX]{%
+  \textsc{gpuADMIX}: GPU-accelerated ancestry estimation with
+  Nesterov-augmented mini-batch EM}
+
+\author[1]{Amplify\ORCID{}}
+
+\address[1]{\orgdiv{},
+            \orgname{},
+            \orgaddress{}}
+
+\corresp[$\ast$]{Corresponding author.
+  \href{mailto:author@university.edu}{author@university.edu}}
+
+\history{Received on XXXX; revised on XXXX; accepted on XXXX}
+
+\editor{Associate Editor: XXXX}
+
+\abstract{
+\input{sections/abstract}
+}
+
+\maketitle
+
+\input{sections/introduction}
+\input{sections/methods}
+\input{sections/results}
+\input{sections/discussion}
+\input{sections/conclusion}
+
+\section*{Acknowledgements}
+The author thanks the developers of ADMIXTURE and fastmixture for
+open-sourcing their tools and results, which made rigorous benchmarking possible.
+
+\section*{Funding}
+This work received no specific grant from any funding agency in the public,
+commercial, or not-for-profit sectors.
+
+\section*{Conflict of Interest}
+None declared.
+
+\section*{Data availability}
+The 1000 Genomes Project data are publicly available at
+\url{https://www.internationalgenome.org/}.
+\gpu{} source code and analysis scripts are available at
+\url{https://github.com/[REPO]}.
+
+\bibliographystyle{oup-abbrvnat}
+\bibliography{references}
+
+\end{document}
