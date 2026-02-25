@@ -42,16 +42,32 @@ Hardware: NVIDIA L20 GPU (gpuADMIX) vs Intel Xeon Platinum 8375C 32-thread CPU (
 ## Research Assistance
 
 This project was conducted with the assistance of
-**[Amplify](https://github.com/cursor-ai/amplify)** — an agentic research
-automation framework that guided the full research workflow: literature review,
-problem formulation, method design, experiment execution, results integration,
-and paper writing.
+**[Amplify](https://evoclaw.github.io/amplify/)** — an open-source agentic
+research automation framework developed at HKUST(GZ) that turns an AI coding
+assistant into an autonomous co-scientist.
+
+Amplify enforced the full 7-phase research workflow for this project:
+
+| Phase | Activity |
+|---|---|
+| 0 — Domain Anchoring | Field identification, expert persona, resource assessment |
+| 1 — Direction Exploration | Literature review of 20+ papers, 6 deep-thinking strategies, multi-agent brainstorming |
+| 2 — Problem Validation | Adversarial 3-agent scrutiny of novelty, feasibility, and question specificity |
+| 3 — Method Design | GPU-native EM design, evaluation protocol locked (metrics frozen before experiments) |
+| 4 — Experiment Execution | Baseline-first, 5 seeds per K, full K=2–10 scan, ablations, cross-validation |
+| 5 — Results Integration | 3-agent story deliberation, claim-evidence alignment, publishability check |
+| 6 — Paper Writing | Modular LaTeX, per-section 3-agent polishing, reference verification |
+
+Key scientific rigor properties enforced by Amplify:
+- **Anti-cherry-picking**: all 5 seeds reported, including failures and variance
+- **Metric lock**: evaluation metrics fixed before any experiment ran
+- **Claim-evidence alignment**: every number in the paper mapped to a specific experiment log
+- **Reference verification**: all citations checked; no fabricated references
 
 **All experimental results are independently reproducible** using the scripts
-and instructions in this repository. Amplify assisted in designing and
-orchestrating the research process; every number in the paper corresponds to
-actual code execution on real hardware. See the [Reproducibility](#reproducibility)
-section below.
+and instructions in this repository. Amplify orchestrated the research process;
+every number in the paper corresponds to actual code execution on real hardware.
+See the [Reproducibility](#reproducibility) section below.
 
 ---
 
@@ -248,4 +264,4 @@ MIT License — see [LICENSE](LICENSE) for details.
   for the CPU state-of-the-art baseline.
 - The 1000 Genomes Project Consortium for the benchmark dataset.
 - Research workflow designed and executed with
-  **[Amplify](https://github.com/cursor-ai/amplify)** agentic research automation.
+  **[Amplify](https://evoclaw.github.io/amplify/)** agentic research automation.
