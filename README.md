@@ -5,6 +5,10 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
+[![Paper](https://img.shields.io/badge/Paper-PDF-green.svg)](paper/main.pdf)
+
+> 📄 **[Read the Paper (PDF)](https://github.com/EvoClaw/gpuADMIX/blob/main/paper/main.pdf)**
+> — *gpuADMIX: GPU-accelerated ancestry estimation with Nesterov-augmented mini-batch EM*
 
 ---
 
