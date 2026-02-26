@@ -177,7 +177,7 @@ retain consistent colour and position across panels of the structure plot.
 Selecting the optimal number of ancestral populations $K$ typically requires
 running the model for several values of $K$ and evaluating model-fit criteria
 such as the Bayesian Information Criterion \citep{schwarz1978estimating}
-or the cross-validation error of \citet{alexander2011genomics}.
+or the cross-validation error of \citet{alexander2011enhancements}.
 Because each value of $K$ is an independent optimisation problem,
 gpuADMIX dispatches the $K = 2, \ldots, K_{\max}$ runs in parallel across
 all available GPUs using Python's \texttt{multiprocessing} module,
